@@ -1,80 +1,75 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Meu Jogo 2D</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <style>
-        body { margin: 0; overflow: hidden; background: #222; }
-        canvas { display: block; }
-    </style>
-</head>
-<body>
+import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
 
-<script type="module">
-    import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
+kaboom({
+    background: [34, 34, 34],
+    touchToMouse: true,
+});
 
-    // Inicializa o motor do jogo
-    kaboom({
-        background: [34, 34, 34], // Cor de fundo escura
-        touchToMouse: true,       // Converte toques na tela em cliques
-    });
+// --- O AJUSTE PRINCIPAL ESTÁ AQUI ---
+// Definimos a força da gravidade (padrão 1600 ou 2400)
+setGravity(2400); 
 
-    // Criando o Personagem (um quadrado azul)
-    const player = add([
-        rect(40, 40),
-        pos(80, 40),
-        color(0, 150, 255),
-        area(),        // Ativa detecção de colisão
-        body(),        // Ativa gravidade e física
-    ]);
+let score = 0;
 
-    // Chão para o personagem não cair infinitamente
+const scoreLabel = add([
+    text("Score: 0"),
+    pos(24, 24),
+    fixed(), // Faz o texto ficar parado na tela
+]);
+
+const player = add([
+    rect(40, 40),
+    pos(80, 40),
+    color(0, 150, 255),
+    area(),
+    body(), // Agora a gravidade vai puxar este corpo
+]);
+
+// Chão
+add([
+    rect(width(), 48),
+    pos(0, height() - 48),
+    outline(4),
+    area(),
+    body({ isStatic: true }),
+    color(127, 200, 100),
+]);
+
+// Função de pulo corrigida
+function jump() {
+    if (player.isGrounded()) {
+        player.jump(800); // Força do pulo
+    }
+}
+
+onKeyPress("space", jump);
+onClick(jump);
+
+// Obstáculos
+loop(1.5, () => {
     add([
-        rect(width(), 48),
-        pos(0, height() - 48),
-        outline(4),
+        rect(30, rand(30, 80)),
         area(),
-        body({ isStatic: true }),
-        color(127, 200, 100),
+        outline(4),
+        pos(width(), height() - 48),
+        anchor("botleft"),
+        color(255, 100, 100),
+        move(LEFT, 300),
+        "obstacle",
     ]);
+});
 
-    // Função de Pulo (funciona no clique ou toque na tela)
-    onKeyPress("space", () => {
-        if (player.isGrounded()) player.jump();
+// Score baseado no tempo
+onUpdate(() => {
+    score += 1;
+    scoreLabel.text = "Score: " + Math.floor(score / 10);
+});
+
+player.onCollide("obstacle", () => {
+    addKaboom(player.pos);
+    shake();
+    destroy(player);
+    wait(1, () => {
+        location.reload();
     });
-
-    onClick(() => {
-        if (player.isGrounded()) player.jump();
-    });
-
-    // Lógica para criar obstáculos a cada 1.5 segundos
-    loop(1.5, () => {
-        add([
-            rect(30, rand(30, 80)),
-            area(),
-            outline(4),
-            pos(width(), height() - 48),
-            anchor("botleft"),
-            color(255, 100, 100),
-            move(LEFT, 240), // Move o obstáculo para a esquerda
-            "obstacle",      // Tag para identificar o objeto
-        ]);
-    });
-
-    // O que acontece quando o jogador bate no obstáculo
-    player.onCollide("obstacle", () => {
-        addKaboom(player.pos); // Efeito visual de explosão
-        destroy(player);       // Remove o jogador
-        wait(1, () => {
-            go("main");        // Reinicia o jogo após 1 segundo
-        });
-    });
-
-    // Define a cena principal
-    scene("main", () => {
-        location.reload(); 
-    });
-
-</script>
-</body>
-  </html>
+});
