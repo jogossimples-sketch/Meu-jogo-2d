@@ -1,75 +1,97 @@
-import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Meu Jogo Kaboom</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #222; }
+    </style>
+</head>
+<body>
 
-kaboom({
-    background: [34, 34, 34],
-    touchToMouse: true,
-});
+<script type="module">
+    // Importa a biblioteca
+    import kaboom from "https://unpkg.com/kaboom@3000.0.1/dist/kaboom.mjs";
 
-// --- O AJUSTE PRINCIPAL ESTÁ AQUI ---
-// Definimos a força da gravidade (padrão 1600 ou 2400)
-setGravity(2400); 
-
-let score = 0;
-
-const scoreLabel = add([
-    text("Score: 0"),
-    pos(24, 24),
-    fixed(), // Faz o texto ficar parado na tela
-]);
-
-const player = add([
-    rect(40, 40),
-    pos(80, 40),
-    color(0, 150, 255),
-    area(),
-    body(), // Agora a gravidade vai puxar este corpo
-]);
-
-// Chão
-add([
-    rect(width(), 48),
-    pos(0, height() - 48),
-    outline(4),
-    area(),
-    body({ isStatic: true }),
-    color(127, 200, 100),
-]);
-
-// Função de pulo corrigida
-function jump() {
-    if (player.isGrounded()) {
-        player.jump(800); // Força do pulo
-    }
-}
-
-onKeyPress("space", jump);
-onClick(jump);
-
-// Obstáculos
-loop(1.5, () => {
-    add([
-        rect(30, rand(30, 80)),
-        area(),
-        outline(4),
-        pos(width(), height() - 48),
-        anchor("botleft"),
-        color(255, 100, 100),
-        move(LEFT, 300),
-        "obstacle",
-    ]);
-});
-
-// Score baseado no tempo
-onUpdate(() => {
-    score += 1;
-    scoreLabel.text = "Score: " + Math.floor(score / 10);
-});
-
-player.onCollide("obstacle", () => {
-    addKaboom(player.pos);
-    shake();
-    destroy(player);
-    wait(1, () => {
-        location.reload();
+    // Inicializa o motor do jogo
+    kaboom({
+        background: [34, 34, 34],
+        touchToMouse: true,
     });
-});
+
+    // Define a gravidade para o quadrado cair
+    setGravity(2400);
+
+    let score = 0;
+
+    // Placar
+    const scoreLabel = add([
+        text("Score: 0"),
+        pos(24, 24),
+        fixed(),
+    ]);
+
+    // O Jogador (Quadrado Azul)
+    const player = add([
+        rect(40, 40),
+        pos(80, 40),
+        color(0, 150, 255),
+        area(),
+        body(),
+    ]);
+
+    // O Chão (Verde)
+    add([
+        rect(width(), 48),
+        pos(0, height() - 48),
+        outline(4),
+        area(),
+        body({ isStatic: true }),
+        color(127, 200, 100),
+    ]);
+
+    // Função para pular
+    function jump() {
+        if (player.isGrounded()) {
+            player.jump(850);
+        }
+    }
+
+    // Controles: Espaço ou Toque na tela
+    onKeyPress("space", jump);
+    onClick(jump);
+
+    // Obstáculos (Vermelhos)
+    loop(1.5, () => {
+        add([
+            rect(30, rand(40, 90)),
+            area(),
+            outline(4),
+            pos(width(), height() - 48),
+            anchor("botleft"),
+            color(255, 100, 100),
+            move(LEFT, 320),
+            "obstacle",
+        ]);
+    });
+
+    // Atualiza pontuação
+    onUpdate(() => {
+        score += 1;
+        scoreLabel.text = "Score: " + Math.floor(score / 10);
+    });
+
+    // Colisão (Morte)
+    player.onCollide("obstacle", () => {
+        addKaboom(player.pos);
+        shake();
+        destroy(player);
+        wait(1, () => {
+            location.reload(); // Recarrega o jogo
+        });
+    });
+
+</script>
+</body>
+    </html>
